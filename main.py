@@ -27,11 +27,14 @@ options.add_argument('--no-sandbox')
 
 service = Service(executable_path=ChromeDriverManager().install())
 
+url : str = input('리뷰를 수집할 주소를 입력 : ')
 driver = webdriver.Chrome(service = service, options=options)
 # wait seconds...
 driver.implicitly_wait(3)
 
-driver.get('https://brand.naver.com/pmogreenjuice/products/6157332427')
+
+
+driver.get(url)
 time.sleep(3)
 
 driver.find_element(By.CSS_SELECTOR,'#content > div > div.z7cS6-TO7X > div._27jmWaPaKy > ul > li:nth-child(2) > a').click()
@@ -168,4 +171,4 @@ result_df = pd.DataFrame({
               'RD_CONTENT' : content_lst,
               'RD_WRITE_DT' : write_dt_lst })
 
-result_df.to_csv('./navershopping_review_data.csv', index = None, encoding = 'utf-8-sig')
+result_df.to_csv('/result/navershopping_review_data.csv', index = None, encoding = 'utf-8-sig')
