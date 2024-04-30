@@ -51,7 +51,7 @@ html_source = driver.page_source
 soup = BeautifulSoup(html_source, 'html.parser')
 time.sleep(0.5)
 
-# 3. 리뷰 정보 가져오기
+# 3. 리뷰 정보 가져오기 / 네이버 쇼핑 공통
 reviews = soup.findAll('li', {'class': 'BnwL_cs1av'})
 
 #사용할 list 최상단 선언
@@ -70,6 +70,7 @@ for review in range(len(reviews)):
     # 4-2-(1) 상품명이 포함된 css 선택자 입력 
     item_nm_info_raw = reviews[review].findAll('div', {'class' : '_2FXNMst_ak'})[0].get_text()
 
+    # print(item_nm_info_raw)
     # 4-2-(2) re.sub() 를 활용해 dl class="XbGQRlzveO"부분부터 추출한 문장을 공백으로 대체
     item_nm_info_for_del = reviews[review].findAll('div', {'class' : '_2FXNMst_ak'})[0].find('dl', {'class' : 'XbGQRlzveO'}).get_text()
 
@@ -147,8 +148,14 @@ while True :
         break
         
     # page 이동
-    driver.find_element(By.CSS_SELECTOR,f'#REVIEW > div > div._2LvIMaBiIO > div._2g7PKvqCKe > div > div > a:nth-child({page_ctl})').click()    
+    print(f'#REVIEW > div > div._2LvIMaBiIO > div._2g7PKvqCKe > div > div > a:nth-child({str(page_ctl)})')
+    driver.find_element(By.CSS_SELECTOR, f'#REVIEW > div > div._2LvIMaBiIO > div._2g7PKvqCKe > div > div > a:nth-child({str(page_ctl)})').click()
+    # driver.find_element(By.CSS_SELECTOR,f'#REVIEW > div > div._2LvIMaBiIO > div._2g7PKvqCKe > div > div > a:nth-child({page_ctl})').click()
+    #driver.find_element(By.XPATH, f'//*[@id="REVIEW"]/div/div[3]/div[2]/div/div/a[{page_ctl}]').click()
+
+    #driver.find_element(By.CSS_SELECTOR,f'#REVIEW > div > div._2LvIMaBiIO > div._2g7PKvqCKe > div > div > a:nth-child({page_ctl})').click()    
     time.sleep(3)
+    
     # 셀레니움으로 html가져오기
     html_source = driver.page_source
     # bs4로 html 파싱
@@ -158,10 +165,13 @@ while True :
     page_num += 1
     page_ctl += 1
 
-    if page_ctl == 10:
+    # 멈춤 구문
+    if page_ctl == 4:
         break
-    # if page_num % 10 == 1 :
-    #     page_ctl = 3
+
+
+    if page_num % 10 == 1 :
+        page_ctl = 3
 print('done')    
 
 
@@ -171,4 +181,4 @@ result_df = pd.DataFrame({
               'RD_CONTENT' : content_lst,
               'RD_WRITE_DT' : write_dt_lst })
 
-result_df.to_csv('/result/navershopping_review_data.csv', index = None, encoding = 'utf-8-sig')
+result_df.to_csv('./result/navershopping_review_data2.csv', index = None, encoding = 'utf-8-sig')
