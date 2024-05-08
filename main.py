@@ -1,6 +1,5 @@
 # https://velog.io/@onicle/%ED%81%AC%EB%A1%A4%EB%A7%81%EB%84%A4%EC%9D%B4%EB%B2%84-%EC%8A%A4%EB%A7%88%ED%8A%B8%EC%8A%A4%ED%86%A0%EC%96%B4-%EB%A6%AC%EB%B7%B0-%EC%88%98%EC%A7%91
 
-import requests
 import re
 from bs4 import BeautifulSoup
  
@@ -44,14 +43,13 @@ time.sleep(3)
 driver.find_element(By.CSS_SELECTOR,'#REVIEW > div > div._2LvIMaBiIO > div._2LAwVxx1Sd > div._1txuie7UTH > ul > li:nth-child(2) > a').click()
 
 time.sleep(3)
-
 # 1. 셀레니움으로 html가져오기
 html_source = driver.page_source
 # 2. bs4로 html 파싱
 soup = BeautifulSoup(html_source, 'html.parser')
 time.sleep(0.5)
 
-# 3. 리뷰 정보 가져오기 / 네이버 쇼핑 공통
+# 3. 리뷰 정보 가져오기
 reviews = soup.findAll('li', {'class': 'BnwL_cs1av'})
 
 #사용할 list 최상단 선언
@@ -69,13 +67,22 @@ for review in range(len(reviews)):
     # 4-2.상품명 수집
     # 4-2-(1) 상품명이 포함된 css 선택자 입력 
     item_nm_info_raw = reviews[review].findAll('div', {'class' : '_2FXNMst_ak'})[0].get_text()
+    item_nm_info_for_del = ''
 
-    # print(item_nm_info_raw)
+    try:
+        item_nm_info_for_del = reviews[review].findAll('div', {'class': '_2FXNMst_ak'})[0].find('dl', {'class': 'XbGQRlzveO'}).get_text()
+        item_nm_info = re.sub(item_nm_info_for_del, '', item_nm_info_raw)
+
+        print('try')
+    except AttributeError:
+        # 리뷰에 상품 정보가 없는 경우 처리할 작업을 여기에 추가
+        item_nm_info = item_nm_info_raw
+        print('err')
     # 4-2-(2) re.sub() 를 활용해 dl class="XbGQRlzveO"부분부터 추출한 문장을 공백으로 대체
-    item_nm_info_for_del = reviews[review].findAll('div', {'class' : '_2FXNMst_ak'})[0].find('dl', {'class' : 'XbGQRlzveO'}).get_text()
+    #item_nm_info_for_del = reviews[review].findAll('div', {'class' : '_2FXNMst_ak'})[0].find('dl', {'class' : 'XbGQRlzveO'}).get_text()
 
     # 4-2-(3) re.sub(pattern, replacement, string) : string에서 pattern에 해당하는 부분을 replacement로 모두 대체
-    item_nm_info= re.sub(item_nm_info_for_del, '', item_nm_info_raw)
+    #item_nm_info= re.sub(item_nm_info_for_del, '', item_nm_info_raw)
 
     # 4-2-(4) find() : 문자열 순서 (인덱스) 반환 : find()를 활용해 '제품 선택 : '이 나오는 인덱스 반환
     str_start_idx = re.sub(item_nm_info_for_del, '', item_nm_info_raw).find('제품 선택: ')
@@ -92,6 +99,7 @@ for review in range(len(reviews)):
     write_dt_lst.append(write_dt)
     item_nm_lst.append(item_nm)
     content_lst.append(review_content)
+
 
 # 현재 페이지
 page_num = 1
@@ -122,7 +130,8 @@ while True :
         item_nm_info_raw = reviews[review].findAll('div', {'class' : '_2FXNMst_ak'})[0].get_text()
 
         # 4-2-(2) re.sub() 를 활용해 dl class="XbGQRlzveO"부분부터 추출한 문장을 공백으로 대체
-        item_nm_info_for_del = reviews[review].findAll('div', {'class' : '_2FXNMst_ak'})[0].find('dl', {'class' : 'XbGQRlzveO'}).get_text()
+        #item_nm_info_for_del = reviews[review].findAll('div', {'class' : '_2FXNMst_ak'})[0].find('dl', {'class' : 'XbGQRlzveO'}).get_text()
+        item_nm_info_for_del = ''
 
         # 4-2-(3) re.sub(pattern, replacement, string) : string에서 pattern에 해당하는 부분을 replacement로 모두 대체
         item_nm_info= re.sub(item_nm_info_for_del, '', item_nm_info_raw)
@@ -148,8 +157,7 @@ while True :
         break
         
     # page 이동
-    print(f'#REVIEW > div > div._2LvIMaBiIO > div._2g7PKvqCKe > div > div > a:nth-child({str(page_ctl)})')
-    driver.find_element(By.CSS_SELECTOR, f'#REVIEW > div > div._2LvIMaBiIO > div._2g7PKvqCKe > div > div > a:nth-child({str(page_ctl)})').click()
+    #driver.find_element(By.CSS_SELECTOR, f'#REVIEW > div > div._2LvIMaBiIO > div._2g7PKvqCKe > div > div > a:nth-child({str(page_ctl)})').click()
     # driver.find_element(By.CSS_SELECTOR,f'#REVIEW > div > div._2LvIMaBiIO > div._2g7PKvqCKe > div > div > a:nth-child({page_ctl})').click()
     #driver.find_element(By.XPATH, f'//*[@id="REVIEW"]/div/div[3]/div[2]/div/div/a[{page_ctl}]').click()
 
@@ -181,4 +189,5 @@ result_df = pd.DataFrame({
               'RD_CONTENT' : content_lst,
               'RD_WRITE_DT' : write_dt_lst })
 
-result_df.to_csv('./result/navershopping_review_data2.csv', index = None, encoding = 'utf-8-sig')
+item_name = soup.select_one('#content > div > div._2-I30XS1lA > div._2QCa6wHHPy > fieldset > div._3k440DUKzy > div._1eddO7u4UC > h3').string
+result_df.to_csv(f'./result/{item_name}_review_data2.csv', index = None, encoding = 'utf-8-sig')
